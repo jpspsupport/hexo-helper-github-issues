@@ -1,6 +1,7 @@
 'use strict';
 const url = require('url');
 const fs = require('fs');
+const path = require('path');
 const uuidv5 = require('uuid/v5');
 
 function postDetails(option, post){
@@ -12,16 +13,27 @@ function postDetails(option, post){
     const postUrl = url.resolve(blogUrl, post.path);
     const postId = uuidv5(postUrl, uuidv5.URL)
     const title = post.title;
-    const sourceFilePath = post.source.replace('_posts/', '');
-    const sourcefileName = post.source.replace('_posts/', '');
-    const githubBlogMaster = url.resolve(option.github.url, 'blob/master/')
-    const githubSourceUrl = url.resolve(githubBlogMaster, sourceFilePath);
+    let sourceFileName;
+    const postsDir = option.github.posts_dir;
+    if (postsDir) {
+        sourceFileName = path.join(postsDir, post.source.replace('_posts', ''));
+    } else {
+        const sourceDir = option.source_dir ? option.source_dir : 'source';
+        sourceFileName = path.join(sourceDir, post.source);
+    }
+    //for windows
+    sourceFileName = sourceFileName.replace(/\\/g,'/');
+    const editRoot = url.resolve(option.github.url, 'edit/master/');
+    const blobRoot = url.resolve(option.github.url, 'blob/master/');
+    const editUrl = url.resolve(editRoot, sourceFileName);
+    const sourceUrl = url.resolve(blobRoot, sourceFileName);
     const author = post.author;
     let template;
     try {
         template = fs.readFileSync('./github-issue-template.md', 'utf8');
     } catch (error) {
         console.error(error);
+        console.error('');
         console.error('Use default template: ');
         template = `
 ---
@@ -32,17 +44,17 @@ function postDetails(option, post){
 
 * Article ID: {{ID}}
 * 対象記事: [{{TITLE}}]({{PostURL}})
-* Content Source: [{{SourceFileName}}]({{SourceFilePath}})
+* Content Source: [{{SourceFileName}}]({{SourceURL}})
 * Author: {{Author}}`;
 
         console.log(template);
     }
-    let documentBody = template.replace('{{TITLE}}', title)
-        .replace("{{ID}}", postId)
-        .replace('{{SourceFileName}}', sourcefileName)
-        .replace('{{SourceFilePath}}', sourceFilePath)
-        .replace('{{PostURL}}', postUrl)
-        .replace('{{Author}}', author ? author : '')
+    let documentBody = template.replace(/\{\{TITLE\}\}/g, title)
+        .replace(/\{\{ID\}\}/g, postId)
+        .replace(/\{\{SourceFileName\}\}/g, sourceFileName)
+        .replace(/\{\{SourceURL\}\}/g, sourceUrl)
+        .replace(/\{\{PostURL\}\}/g, postUrl)
+        .replace(/\{\{Author\}\}/g, author ? author : '')
         .replace('\r\n', '\n');
 
     issueUrl.searchParams.append('title', '');
@@ -50,7 +62,8 @@ function postDetails(option, post){
     return {
         postId,
         issueUrl: issueUrl.href,
-        sourceUrl: githubSourceUrl
+        sourceUrl: sourceUrl,
+        editUrl: editUrl
     }
 }
 
