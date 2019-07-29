@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const uuidv5 = require('uuid/v5');
 
-function postDetails(option, post){
+
+function githubDataHelper(config = {}, post = {}) {
     let blogUrl = option.url
     const issueUrl = new URL(url.resolve(option.github.url, 'issues/new'));
     if (option.root) {
@@ -65,10 +66,6 @@ function postDetails(option, post){
         sourceUrl: sourceUrl,
         editUrl: editUrl
     }
-}
-
-function githubDataHelper(config = {}, post = {}) {
-    return postDetails(config, post);
 }
 
 hexo.extend.helper.register('githubData', githubDataHelper);
