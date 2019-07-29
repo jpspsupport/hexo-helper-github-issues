@@ -6,26 +6,26 @@ const uuidv5 = require('uuid/v5');
 
 
 function githubDataHelper(config = {}, post = {}) {
-    let blogUrl = option.url
-    const issueUrl = new URL(url.resolve(option.github.url, 'issues/new'));
-    if (option.root) {
-        blogUrl = url.resolve(blogUrl, option.root);
+    let blogUrl = config.url
+    const issueUrl = new URL(url.resolve(config.github.url, 'issues/new'));
+    if (config.root) {
+        blogUrl = url.resolve(blogUrl, config.root);
     }
     const postUrl = url.resolve(blogUrl, post.path);
     const postId = uuidv5(postUrl, uuidv5.URL)
     const title = post.title;
     let sourceFileName;
-    const postsDir = option.github.posts_dir;
+    const postsDir = config.github.posts_dir;
     if (postsDir) {
         sourceFileName = path.join(postsDir, post.source.replace('_posts', ''));
     } else {
-        const sourceDir = option.source_dir ? option.source_dir : 'source';
+        const sourceDir = config.source_dir ? config.source_dir : 'source';
         sourceFileName = path.join(sourceDir, post.source);
     }
     //for windows
     sourceFileName = sourceFileName.replace(/\\/g,'/');
-    const editRoot = url.resolve(option.github.url, 'edit/master/');
-    const blobRoot = url.resolve(option.github.url, 'blob/master/');
+    const editRoot = url.resolve(config.github.url, 'edit/master/');
+    const blobRoot = url.resolve(config.github.url, 'blob/master/');
     const editUrl = url.resolve(editRoot, sourceFileName);
     const sourceUrl = url.resolve(blobRoot, sourceFileName);
     const author = post.author;
